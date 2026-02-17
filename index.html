@@ -1,0 +1,2176 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>운명 맞춤 호스팅 - Airbnb Saju Matching System</title>
+  <script src="https://cdn.jsdelivr.net/npm/lunar-javascript@1.6.12/lunar.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', -apple-system, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f1419 0%, #1a2332 100%);
+      color: #e8e6e3;
+    }
+
+    .app {
+      min-height: 100vh;
+    }
+
+    .header {
+      background: rgba(20, 25, 35, 0.95);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo svg {
+      color: #f4a261;
+      animation: sparkle 2s ease-in-out infinite;
+    }
+
+    @keyframes sparkle {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+      }
+    }
+
+    .logo h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #f4a261 0%, #e76f51 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+    }
+
+    .logo p {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 0.125rem;
+      letter-spacing: 0.05em;
+    }
+
+    .nav {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .nav button {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.7);
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .nav button:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    .nav button.active {
+      background: linear-gradient(135deg, #f4a261 0%, #e76f51 100%);
+      border-color: transparent;
+      color: #fff;
+    }
+
+    .main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    /* Dashboard */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(244, 162, 97, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #f4a261 0%, #e76f51 100%);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 1.5rem;
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .quick-actions {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 3rem;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      padding: 1rem 2rem;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+      flex: 1;
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, #f4a261 0%, #e76f51 100%);
+      color: #fff;
+    }
+
+    .primary-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(244, 162, 97, 0.3);
+    }
+
+    .secondary-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .secondary-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: #fff;
+    }
+
+    .rooms-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .room-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .room-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(244, 162, 97, 0.3);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3);
+    }
+
+    .room-header {
+      padding: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .room-emoji {
+      font-size: 3rem;
+    }
+
+    .room-element {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 600;
+    }
+
+    .room-body {
+      padding: 1.5rem 2rem 2rem;
+    }
+
+    .room-number {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 0.25rem;
+      letter-spacing: 0.05em;
+    }
+
+    .room-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.75rem;
+    }
+
+    .room-description {
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
+    }
+
+    .room-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .feature-tag {
+      padding: 0.4rem 0.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Check-in View */
+    .checkin-view {
+      max-width: 600px;
+      margin: 2rem auto;
+    }
+
+    .form-container {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 3rem;
+    }
+
+    .form-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: #fff;
+    }
+
+    .form-subtitle {
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 2.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: rgba(255, 255, 255, 0.8);
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 1rem 1.25rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #f4a261;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .form-input::placeholder {
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    .birth-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .time-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .calendar-type-selector {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .calendar-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .calendar-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .calendar-btn.active {
+      background: linear-gradient(135deg, #f4a261 0%, #e76f51 100%);
+      border-color: transparent;
+      color: #fff;
+    }
+
+    .calendar-btn svg {
+      flex-shrink: 0;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2.5rem;
+    }
+
+    .result-view {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .result-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .result-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: #fff;
+    }
+
+    .result-subtitle {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 1.1rem;
+    }
+
+    /* Saju Analysis Section */
+    .saju-analysis {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 2.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .analysis-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.5rem;
+      margin-bottom: 2rem;
+      color: #fff;
+    }
+
+    .element-chart {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 16px;
+    }
+
+    .element-bar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .element-bar-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .element-bar-container {
+      width: 100%;
+      height: 120px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      overflow: hidden;
+    }
+
+    .element-bar-fill {
+      width: 100%;
+      border-radius: 8px 8px 0 0;
+      transition: height 0.6s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #fff;
+      font-size: 1.25rem;
+    }
+
+    .balance-tip {
+      margin-bottom: 2rem;
+    }
+
+    .personality-section h4,
+    .fortune-section h4,
+    .balance-tip h4,
+    .daily-fortune h4 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      color: #f4a261;
+    }
+
+    .personality-section p,
+    .balance-tip p {
+      color: rgba(255, 255, 255, 0.85);
+      line-height: 1.8;
+      font-size: 1.05rem;
+    }
+
+    .daily-fortune {
+      margin-top: 2rem;
+    }
+
+    .daily-fortune-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    .daily-fortune-item {
+      background: linear-gradient(135deg, rgba(244, 162, 97, 0.05) 0%, rgba(231, 111, 81, 0.05) 100%);
+      border: 1px solid rgba(244, 162, 97, 0.2);
+      border-radius: 16px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .daily-fortune-item:hover {
+      background: linear-gradient(135deg, rgba(244, 162, 97, 0.1) 0%, rgba(231, 111, 81, 0.1) 100%);
+      border-color: rgba(244, 162, 97, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .fortune-emoji {
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .fortune-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 0.75rem;
+    }
+
+    .fortune-stars {
+      font-size: 1.25rem;
+      margin-bottom: 0.75rem;
+      letter-spacing: 0.25rem;
+    }
+
+    .fortune-message {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 1.5;
+    }
+
+    .fortune-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    .fortune-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .fortune-card:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(244, 162, 97, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .fortune-icon {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .fortune-label {
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    .fortune-value {
+      color: #f4a261;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .result-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .result-room,
+    .welcome-guide {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 2rem;
+    }
+
+    .room-showcase {
+      border-radius: 16px;
+      padding: 2.5rem;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .room-showcase-emoji {
+      font-size: 5rem;
+      margin-bottom: 1rem;
+    }
+
+    .room-showcase-number {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 0.5rem;
+    }
+
+    .room-showcase-name {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 1rem;
+    }
+
+    .room-showcase-element {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .matching-reason,
+    .room-features-list {
+      margin-bottom: 2rem;
+    }
+
+    .matching-reason h3,
+    .room-features-list h3 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      color: #fff;
+    }
+
+    .matching-reason p {
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 1.7;
+    }
+
+    .room-features-list ul {
+      list-style: none;
+    }
+
+    .room-features-list li {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 0;
+      color: rgba(255, 255, 255, 0.8);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .room-features-list li:last-child {
+      border-bottom: none;
+    }
+
+    .guide-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.3rem;
+      margin-bottom: 2rem;
+      color: #fff;
+    }
+
+    .guide-section {
+      padding: 1.25rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      margin-bottom: 1rem;
+    }
+
+    .guide-label {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 0.5rem;
+    }
+
+    .guide-value {
+      color: #fff;
+      font-weight: 600;
+      font-size: 1.05rem;
+    }
+
+    .guide-tip {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: linear-gradient(135deg, rgba(244, 162, 97, 0.1) 0%, rgba(231, 111, 81, 0.1) 100%);
+      border: 1px solid rgba(244, 162, 97, 0.2);
+      border-radius: 12px;
+    }
+
+    .guide-tip strong {
+      display: block;
+      color: #f4a261;
+      margin-bottom: 0.5rem;
+    }
+
+    .guide-tip p {
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 1.6;
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 1rem;
+    }
+
+    /* History View */
+    .history-view {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .history-header h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1.25rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      width: 300px;
+    }
+
+    .search-box input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .search-box input::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .history-list {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 1rem;
+      margin-bottom: 2rem;
+      min-height: 400px;
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 400px;
+      color: rgba(255, 255, 255, 0.4);
+      gap: 1rem;
+    }
+
+    .history-item {
+      display: grid;
+      grid-template-columns: 2fr 2fr 1.5fr auto;
+      gap: 2rem;
+      padding: 1.5rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      margin-bottom: 1rem;
+      align-items: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .history-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(244, 162, 97, 0.2);
+      transform: translateX(4px);
+    }
+
+    .view-analysis-btn {
+      color: #f4a261;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: rgba(244, 162, 97, 0.1);
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .history-item:hover .view-analysis-btn {
+      background: rgba(244, 162, 97, 0.2);
+      transform: translateX(4px);
+    }
+
+    .history-guest {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .history-avatar {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, #f4a261 0%, #e76f51 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .history-name {
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 0.25rem;
+    }
+
+    .history-date {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .history-room {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .history-room-badge {
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .history-room-name {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.9rem;
+    }
+
+    .history-element {
+      text-align: right;
+    }
+
+    .element-label {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 0.5rem;
+    }
+
+    .element-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 600;
+    }
+
+    .history-actions {
+      display: flex;
+      justify-content: center;
+    }
+
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .nav {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .nav button {
+        flex: 1;
+        justify-content: center;
+        font-size: 0.85rem;
+        padding: 0.65rem 0.75rem;
+      }
+
+      .result-container {
+        grid-template-columns: 1fr;
+      }
+
+      .birth-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+
+      .time-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .fortune-cards {
+        grid-template-columns: 1fr;
+      }
+
+      .daily-fortune-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .element-chart {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0.5rem;
+        padding: 1rem;
+      }
+
+      .element-bar-container {
+        height: 80px;
+      }
+
+      .history-item {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .history-element {
+        text-align: left;
+      }
+
+      .view-analysis-btn {
+        margin: 0 auto;
+      }
+    }
+
+    @media print {
+
+      .header,
+      .nav,
+      .result-actions,
+      .history-actions {
+        display: none;
+      }
+
+      body {
+        background: white;
+        color: black;
+      }
+
+      .result-container {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-content">
+        <div class="logo">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+          </svg>
+          <div>
+            <h1>운명 맞춤 호스팅</h1>
+            <p>Airbnb Saju Matching System</p>
+          </div>
+        </div>
+
+        <nav class="nav">
+          <button class="active" onclick="showView('dashboard')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+            대시보드
+          </button>
+          <button onclick="showView('checkin')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            체크인
+          </button>
+          <button onclick="showView('history')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            이력
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- Dashboard View -->
+      <div id="dashboard" class="view active">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">👤</div>
+            <div class="stat-content">
+              <div class="stat-label">총 게스트</div>
+              <div class="stat-value" id="totalGuests">0</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">🏠</div>
+            <div class="stat-content">
+              <div class="stat-label">객실 수</div>
+              <div class="stat-value">5</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">✨</div>
+            <div class="stat-content">
+              <div class="stat-label">매칭 완료</div>
+              <div class="stat-value" id="totalMatches">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="quick-actions">
+          <button class="primary-btn" onclick="showView('checkin')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            새 게스트 체크인
+          </button>
+          <button class="secondary-btn" onclick="showView('history')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            게스트 이력
+          </button>
+        </div>
+
+        <div class="rooms-section">
+          <h2 class="section-title">객실 현황</h2>
+          <div class="rooms-grid" id="roomsGrid"></div>
+        </div>
+      </div>
+
+      <!-- Check-in View -->
+      <div id="checkin" class="view">
+        <div class="checkin-view">
+          <div class="form-container">
+            <h2 class="form-title">게스트 체크인</h2>
+            <p class="form-subtitle">게스트의 정보를 입력하여 최적의 객실을 찾아드립니다</p>
+
+            <div class="form-group">
+              <label>성함</label>
+              <input type="text" id="guestName" class="form-input" placeholder="홍길동">
+            </div>
+
+            <div class="form-group">
+              <label>생년월일 기준</label>
+              <div class="calendar-type-selector">
+                <button type="button" class="calendar-btn active" id="solarBtn" onclick="selectCalendarType('solar')">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5" />
+                    <line x1="12" y1="1" x2="12" y2="3" />
+                    <line x1="12" y1="21" x2="12" y2="23" />
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                    <line x1="1" y1="12" x2="3" y2="12" />
+                    <line x1="21" y1="12" x2="23" y2="12" />
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                  </svg>
+                  양력
+                </button>
+                <button type="button" class="calendar-btn" id="lunarBtn" onclick="selectCalendarType('lunar')">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                  </svg>
+                  음력
+                </button>
+              </div>
+            </div>
+
+            <div class="birth-grid">
+              <div class="form-group">
+                <label>생년</label>
+                <input type="number" id="birthYear" class="form-input" placeholder="1990" min="1900" max="2024"
+                  step="1">
+              </div>
+
+              <div class="form-group">
+                <label>월</label>
+                <input type="number" id="birthMonth" class="form-input" placeholder="6" min="1" max="12" step="1">
+              </div>
+
+              <div class="form-group">
+                <label>일</label>
+                <input type="number" id="birthDay" class="form-input" placeholder="15" min="1" max="31" step="1">
+              </div>
+            </div>
+
+            <div class="time-grid">
+              <div class="form-group">
+                <label>시 (24시간)</label>
+                <input type="number" id="birthHour" class="form-input" placeholder="14" min="0" max="23" step="1">
+              </div>
+
+              <div class="form-group">
+                <label>분</label>
+                <input type="number" id="birthMinute" class="form-input" placeholder="30" min="0" max="59" step="1">
+              </div>
+            </div>
+
+            <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 8px;">
+              <label style="display: flex; align-items: center; cursor: pointer; font-size: 0.9rem;">
+                <input type="checkbox" id="timeUnknown" style="margin-right: 0.5rem; cursor: pointer;"
+                  onchange="toggleTimeInput()">
+                <span>출생 시간을 모르겠어요 (시주 제외)</span>
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button class="secondary-btn" onclick="showView('dashboard')">취소</button>
+              <button class="primary-btn" onclick="handleCheckIn()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path
+                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+                매칭하기
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result View -->
+      <div id="result" class="view">
+        <div class="result-view">
+          <div class="result-header">
+            <h2 class="result-title" id="resultGuestName"></h2>
+            <p class="result-subtitle">사주 분석을 통해 최적의 공간을 찾았습니다</p>
+          </div>
+
+          <!-- Saju Analysis Section -->
+          <div class="saju-analysis">
+            <h3 class="analysis-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              당신의 사주 분석
+            </h3>
+
+            <div class="element-chart" id="elementChart"></div>
+
+            <div class="personality-section">
+              <h4>🌟 성격 및 기질</h4>
+              <p id="personalityText"></p>
+            </div>
+
+            <div class="fortune-section">
+              <h4>✨ 이번 숙박에서 기대할 수 있는 것</h4>
+              <div class="fortune-cards" id="fortuneCards"></div>
+            </div>
+
+            <div class="balance-tip">
+              <h4>⚖️ 오행 균형 조언</h4>
+              <p id="balanceTip"></p>
+            </div>
+
+            <div class="daily-fortune">
+              <h4>🔮 오늘의 운세</h4>
+              <div class="daily-fortune-grid">
+                <div class="daily-fortune-item">
+                  <div class="fortune-emoji">💖</div>
+                  <div class="fortune-title">연애운</div>
+                  <div class="fortune-stars" id="loveStars"></div>
+                  <div class="fortune-message" id="loveMessage"></div>
+                </div>
+                <div class="daily-fortune-item">
+                  <div class="fortune-emoji">💼</div>
+                  <div class="fortune-title">사업/학업운</div>
+                  <div class="fortune-stars" id="careerStars"></div>
+                  <div class="fortune-message" id="careerMessage"></div>
+                </div>
+                <div class="daily-fortune-item">
+                  <div class="fortune-emoji">💰</div>
+                  <div class="fortune-title">금전운</div>
+                  <div class="fortune-stars" id="moneyStars"></div>
+                  <div class="fortune-message" id="moneyMessage"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="result-container">
+            <div class="result-room">
+              <div class="room-showcase" id="roomShowcase">
+                <div class="room-showcase-emoji" id="roomShowcaseEmoji"></div>
+                <div class="room-showcase-info">
+                  <div class="room-showcase-number" id="roomShowcaseNumber"></div>
+                  <div class="room-showcase-name" id="roomShowcaseName"></div>
+                  <div class="room-showcase-element" id="roomShowcaseElement"></div>
+                </div>
+              </div>
+
+              <div class="matching-reason">
+                <h3>매칭 이유</h3>
+                <p id="matchingReason"></p>
+              </div>
+
+              <div class="room-features-list">
+                <h3>객실 특징</h3>
+                <ul id="roomFeaturesList"></ul>
+              </div>
+            </div>
+
+            <div class="welcome-guide">
+              <h3 class="guide-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path
+                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+                개운 웰컴 가이드
+              </h3>
+
+              <div class="guide-section">
+                <div class="guide-label">추천 웰컴 티</div>
+                <div class="guide-value" id="welcomeTea"></div>
+              </div>
+
+              <div class="guide-section">
+                <div class="guide-label">아로마 향</div>
+                <div class="guide-value" id="welcomeAroma"></div>
+              </div>
+
+              <div class="guide-section">
+                <div class="guide-label">추천 활동</div>
+                <div class="guide-value" id="welcomeActivity"></div>
+              </div>
+
+              <div class="guide-section">
+                <div class="guide-label">침대 방향</div>
+                <div class="guide-value" id="welcomeDirection"></div>
+              </div>
+
+              <div class="guide-section">
+                <div class="guide-label">행운의 컬러</div>
+                <div class="guide-value" id="welcomeColor"></div>
+              </div>
+
+              <div class="guide-tip">
+                <strong>💡 숙박 팁</strong>
+                <p id="welcomeTip"></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="result-actions">
+            <button class="secondary-btn" onclick="showView('dashboard')">대시보드로</button>
+            <button class="primary-btn" onclick="window.print()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
+              </svg>
+              가이드 출력
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- History View -->
+      <div id="history" class="view">
+        <div class="history-view">
+          <div class="history-header">
+            <h2>게스트 이력</h2>
+            <div class="search-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+              <input type="text" id="searchInput" placeholder="게스트 이름 검색..." oninput="filterGuests()">
+            </div>
+          </div>
+
+          <div class="history-list" id="historyList"></div>
+
+          <div class="history-actions">
+            <button class="secondary-btn" onclick="showView('dashboard')">대시보드로</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script>
+    // Data
+    const ROOMS = {
+      101: {
+        id: 101,
+        name: 'The Forest',
+        nameKo: '숲의 방',
+        element: 'WOOD',
+        elementKo: '木',
+        description: '편백나무 욕조와 플랜테리어가 어우러진 자연의 방',
+        features: ['편백나무 욕조', '플랜테리어', '자연광', '목재 가구'],
+        color: '#2d5016',
+        bgGradient: 'linear-gradient(135deg, #1a3d0c 0%, #4a7c2e 100%)',
+        image: '🌲'
+      },
+      102: {
+        id: 102,
+        name: 'The Sun',
+        nameKo: '태양의 방',
+        element: 'FIRE',
+        elementKo: '火',
+        description: '따뜻한 벽난로와 웜톤 조명의 에너지 넘치는 공간',
+        features: ['전기 벽난로', '남향 채광', '웜톤 조명', '레드 액센트'],
+        color: '#c84b31',
+        bgGradient: 'linear-gradient(135deg, #8b2e1f 0%, #d4693d 100%)',
+        image: '🔥'
+      },
+      201: {
+        id: 201,
+        name: 'The Earth',
+        nameKo: '대지의 방',
+        element: 'EARTH',
+        elementKo: '土',
+        description: '황토방 스타일의 안정적이고 포근한 공간',
+        features: ['황토벽', '낮은 침대', '어스톤 인테리어', '명상 공간'],
+        color: '#8d6e4f',
+        bgGradient: 'linear-gradient(135deg, #5c4a33 0%, #a68968 100%)',
+        image: '⛰️'
+      },
+      202: {
+        id: 202,
+        name: 'The Atelier',
+        nameKo: '아틀리에',
+        element: 'METAL',
+        elementKo: '金',
+        description: '모던하고 세련된 금속의 미학',
+        features: ['메탈 가구', '화이트 노이즈', '미니멀 디자인', '고급 침구'],
+        color: '#7a7a7a',
+        bgGradient: 'linear-gradient(135deg, #4a4a4a 0%, #9a9a9a 100%)',
+        image: '⚡'
+      },
+      301: {
+        id: 301,
+        name: 'The Ocean',
+        nameKo: '바다의 방',
+        element: 'WATER',
+        elementKo: '水',
+        description: '물소리와 네이비 침구의 평온한 휴식처',
+        features: ['물소리 사운드', '네이비 침구', '오션 뷰', '가습기'],
+        color: '#2c5f8d',
+        bgGradient: 'linear-gradient(135deg, #1a3a5c 0%, #3d7aa8 100%)',
+        image: '🌊'
+      }
+    };
+
+    const WELCOME_ITEMS = {
+      WOOD: {
+        tea: '녹차 / 매실차',
+        aroma: '피톤치드 / 솔향',
+        activity: '독서 / 산림욕',
+        direction: '동쪽',
+        color: '초록색'
+      },
+      FIRE: {
+        tea: '구기자차 / 홍차',
+        aroma: '로즈마리 / 시나몬',
+        activity: '일광욕 / 활기찬 활동',
+        direction: '남쪽',
+        color: '빨강색'
+      },
+      EARTH: {
+        tea: '황기차 / 대추차',
+        aroma: '샌달우드 / 백단향',
+        activity: '명상 / 요가',
+        direction: '남서쪽 / 동북쪽',
+        color: '황색'
+      },
+      METAL: {
+        tea: '도라지차 / 생강차',
+        aroma: '유칼립투스 / 페퍼민트',
+        activity: '정리정돈 / 사색',
+        direction: '서쪽',
+        color: '흰색'
+      },
+      WATER: {
+        tea: '결명자차 / 옥수수차',
+        aroma: '라벤더 / 재스민',
+        activity: '음악감상 / 휴식',
+        direction: '북쪽',
+        color: '검정/파랑'
+      }
+    };
+
+    const ELEMENT_PERSONALITIES = {
+      WOOD: {
+        strong: '창의적이고 성장지향적인 성격입니다. 새로운 시작과 도전을 즐기며, 유연한 사고로 문제를 해결합니다.',
+        weak: '목기운이 부족하여 때로는 우유부단하거나 성장 동력이 부족할 수 있습니다.',
+        color: '#4a7c2e'
+      },
+      FIRE: {
+        strong: '열정적이고 카리스마 넘치는 성격입니다. 사람들에게 에너지를 주며, 리더십과 추진력이 뛰어납니다.',
+        weak: '화기운이 부족하여 열정이나 추진력이 다소 약할 수 있습니다.',
+        color: '#d4693d'
+      },
+      EARTH: {
+        strong: '안정적이고 신뢰할 수 있는 성격입니다. 포용력이 있고 현실적이며, 타인을 편안하게 합니다.',
+        weak: '토기운이 부족하여 불안정하거나 근거가 약할 수 있습니다.',
+        color: '#a68968'
+      },
+      METAL: {
+        strong: '원칙적이고 분석적인 성격입니다. 논리적이며 정의로우며, 명확한 기준을 가지고 있습니다.',
+        weak: '금기운이 부족하여 결단력이나 원칙이 부족할 수 있습니다.',
+        color: '#9a9a9a'
+      },
+      WATER: {
+        strong: '지혜롭고 적응력이 뛰어난 성격입니다. 통찰력이 있고 유연하며, 흐름을 읽는 능력이 탁월합니다.',
+        weak: '수기운이 부족하여 지혜나 유연성이 다소 부족할 수 있습니다.',
+        color: '#3d7aa8'
+      }
+    };
+
+    const FORTUNE_MESSAGES = {
+      WOOD: {
+        health: { icon: '🌱', label: '건강운', value: '활력 충전' },
+        wealth: { icon: '💰', label: '재물운', value: '성장의 기회' },
+        relationship: { icon: '💚', label: '인간관계', value: '새로운 인연' }
+      },
+      FIRE: {
+        health: { icon: '🔥', label: '건강운', value: '에너지 상승' },
+        wealth: { icon: '💎', label: '재물운', value: '열정의 결실' },
+        relationship: { icon: '❤️', label: '인간관계', value: '리더십 발휘' }
+      },
+      EARTH: {
+        health: { icon: '⛰️', label: '건강운', value: '안정과 회복' },
+        wealth: { icon: '🏆', label: '재물운', value: '착실한 축적' },
+        relationship: { icon: '🤝', label: '인간관계', value: '신뢰 구축' }
+      },
+      METAL: {
+        health: { icon: '⚡', label: '건강운', value: '정화와 정돈' },
+        wealth: { icon: '💫', label: '재물운', value: '명확한 방향' },
+        relationship: { icon: '🎯', label: '인간관계', value: '원칙 있는 관계' }
+      },
+      WATER: {
+        health: { icon: '💧', label: '건강운', value: '순환과 휴식' },
+        wealth: { icon: '🌊', label: '재물운', value: '흐름을 타라' },
+        relationship: { icon: '💙', label: '인간관계', value: '깊은 이해' }
+      }
+    };
+
+    const BALANCE_TIPS = {
+      WOOD: '목(木)기운을 보충하면 창의성과 성장 동력이 증가합니다. 이 방에서 새로운 아이디어가 떠오르거나, 막혔던 일이 풀릴 수 있습니다. 아침 일찍 일어나 창가에서 햇빛을 받으면 더욱 좋습니다.',
+      FIRE: '화(火)기운을 보충하면 열정과 추진력이 강화됩니다. 이 방에서 용기를 얻고, 미뤄뒀던 일을 시작할 수 있습니다. 따뜻한 차를 마시며 긍정적인 생각을 하면 운기가 상승합니다.',
+      EARTH: '토(土)기운을 보충하면 안정감과 신뢰감이 높아집니다. 이 방에서 마음이 편안해지고, 깊은 휴식을 취할 수 있습니다. 바닥에 앉거나 누워 명상을 하면 대지의 기운을 받을 수 있습니다.',
+      METAL: '금(金)기운을 보충하면 판단력과 실행력이 향상됩니다. 이 방에서 머리가 맑아지고, 올바른 결정을 내릴 수 있습니다. 정리정돈을 하거나 계획을 세우면 금기운이 더욱 강화됩니다.',
+      WATER: '수(水)기운을 보충하면 지혜와 통찰력이 깊어집니다. 이 방에서 복잡한 문제의 해답을 찾거나, 새로운 관점을 얻을 수 있습니다. 물소리를 들으며 깊은 사색에 잠기면 수기운이 채워집니다.'
+    };
+
+    const DAILY_FORTUNES = {
+      WOOD: {
+        love: { stars: 4, message: '새로운 인연의 시작. 자연스러운 만남이 기다립니다.' },
+        career: { stars: 5, message: '창의적인 아이디어로 성장의 기회를 잡으세요.' },
+        money: { stars: 3, message: '작은 투자가 큰 나무로 자랄 수 있습니다.' }
+      },
+      FIRE: {
+        love: { stars: 5, message: '열정이 넘치는 하루. 적극적인 행동이 좋은 결과를 가져옵니다.' },
+        career: { stars: 4, message: '리더십을 발휘할 절호의 기회입니다.' },
+        money: { stars: 4, message: '추진력 있는 결정이 재물을 불러옵니다.' }
+      },
+      EARTH: {
+        love: { stars: 3, message: '안정적인 관계 발전. 신뢰를 쌓는 시간입니다.' },
+        career: { stars: 4, message: '꾸준함이 빛을 발합니다. 차근차근 나아가세요.' },
+        money: { stars: 5, message: '착실한 저축과 투자로 안정적인 재물운.' }
+      },
+      METAL: {
+        love: { stars: 3, message: '원칙을 지키되 유연함도 필요합니다.' },
+        career: { stars: 5, message: '명확한 판단으로 중요한 결정을 내리기 좋은 날.' },
+        money: { stars: 4, message: '정확한 분석이 재물을 지킵니다.' }
+      },
+      WATER: {
+        love: { stars: 4, message: '깊은 대화로 마음이 통하는 하루입니다.' },
+        career: { stars: 3, message: '흐름을 읽고 적응하는 지혜가 필요합니다.' },
+        money: { stars: 4, message: '유연한 대처로 예상치 못한 재물운이 들어옵니다.' }
+      }
+    };
+
+    let guests = [];
+    let currentGuest = null;
+    let matchResult = null;
+    let calendarType = 'solar'; // 'solar' or 'lunar'
+
+    // Initialize
+    function init() {
+      loadGuests();
+      renderRooms();
+      updateStats();
+    }
+
+    // Calendar type selection
+    function selectCalendarType(type) {
+      calendarType = type;
+      document.getElementById('solarBtn').classList.remove('active');
+      document.getElementById('lunarBtn').classList.remove('active');
+
+      if (type === 'solar') {
+        document.getElementById('solarBtn').classList.add('active');
+      } else {
+        document.getElementById('lunarBtn').classList.add('active');
+      }
+    }
+
+    // Toggle time input based on "Unknown" checkbox
+    function toggleTimeInput() {
+      const checkbox = document.getElementById('timeUnknown');
+      const hourInput = document.getElementById('birthHour');
+      const minuteInput = document.getElementById('birthMinute');
+
+      if (checkbox.checked) {
+        hourInput.value = '';
+        minuteInput.value = '';
+        hourInput.disabled = true;
+        minuteInput.disabled = true;
+        hourInput.style.opacity = '0.5';
+        minuteInput.style.opacity = '0.5';
+      } else {
+        hourInput.disabled = false;
+        minuteInput.disabled = false;
+        hourInput.style.opacity = '1';
+        minuteInput.style.opacity = '1';
+      }
+    }
+
+    // Storage functions
+    function loadGuests() {
+      const stored = localStorage.getItem('airbnb-guests');
+      if (stored) {
+        guests = JSON.parse(stored);
+        // Migrate old data that doesn't have strongestElement
+        guests = guests.map(guest => {
+          if (!guest.saju.strongestElement) {
+            // Recalculate to add strongestElement
+            let maxElement = 'WOOD';
+            let maxCount = 0;
+            Object.entries(guest.saju.elementCount).forEach(([element, count]) => {
+              if (count > maxCount) {
+                maxCount = count;
+                maxElement = element;
+              }
+            });
+            guest.saju.strongestElement = maxElement;
+          }
+          return guest;
+        });
+        // Save migrated data
+        saveGuests();
+      }
+    }
+
+    function saveGuests() {
+      localStorage.setItem('airbnb-guests', JSON.stringify(guests));
+      updateStats();
+    }
+
+    // Saju calculation
+    // ======== 정밀 4주 계산 (lunar-javascript 라이브러리 기반) ========
+    const stems = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"];
+    const branches = ["자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해"];
+
+    // 오행 매핑 (라이브러리가 반환하는 한자 지원)
+    const stemElement = {
+      "갑": "WOOD", "을": "WOOD", "병": "FIRE", "정": "FIRE", "무": "EARTH", "기": "EARTH", "경": "METAL", "신": "METAL", "임": "WATER", "계": "WATER",
+      "甲": "WOOD", "乙": "WOOD", "丙": "FIRE", "丁": "FIRE", "戊": "EARTH", "己": "EARTH", "庚": "METAL", "辛": "METAL", "壬": "WATER", "癸": "WATER"
+    };
+    const branchElement = {
+      "자": "WATER", "해": "WATER", "인": "WOOD", "묘": "WOOD", "사": "FIRE", "오": "FIRE", "신": "METAL", "유": "METAL", "진": "EARTH", "술": "EARTH", "축": "EARTH", "미": "EARTH",
+      "子": "WATER", "亥": "WATER", "寅": "WOOD", "卯": "WOOD", "巳": "FIRE", "午": "FIRE", "申": "METAL", "酉": "METAL", "辰": "EARTH", "戌": "EARTH", "丑": "EARTH", "未": "EARTH"
+    };
+
+    function getDailyFortune(dayGanZhi) {
+      if (!dayGanZhi || dayGanZhi.length < 2) return null;
+
+      const todaySolar = window.Solar.fromDate(new Date());
+      const todayLunar = todaySolar.getLunar();
+      const todayDayGanZhi = todayLunar.getDayInGanZhi();
+      const todayStem = todayDayGanZhi[0];
+
+      const userStem = dayGanZhi[0];
+      const userElement = stemElement[userStem];
+      const todayElement = stemElement[todayStem];
+
+      // Define relationship (Sipsin) based on elements
+      const elementOrder = ["WOOD", "FIRE", "EARTH", "METAL", "WATER"];
+      const userIdx = elementOrder.indexOf(userElement);
+      const todayIdx = elementOrder.indexOf(todayElement);
+
+      // Relationship distance (0: Same, 1: Creation, 2: Control, 3: Over-control, 4: Support)
+      const diff = (todayIdx - userIdx + 5) % 5;
+
+      const sipsinPool = {
+        0: { // Same (Bi-Gyeon/Geop-Jae): Social, Peer focus
+          love: "친구 같은 편안한 조언이 필요한 날입니다.",
+          career: "동료들과 협력할 때 시너지가 크게 발생합니다.",
+          money: "지출보다는 정보 공유를 통한 기회를 찾으세요.",
+          score: 3
+        },
+        1: { // Creation (Sik-Sang): Creativity, Expression
+          love: "나의 마음을 솔직하게 표현하면 행운이 따릅니다.",
+          career: "새로운 아이디어가 돋보여 능력을 인정받습니다.",
+          money: "나를 위한 투자가 미래의 재물로 돌아옵니다.",
+          score: 4
+        },
+        2: { // Control (Jae-Seong): Wealth, Accomplishment
+          love: "관계를 주도적으로 이끌 때 좋은 결과가 생깁니다.",
+          career: "목표한 바를 끝까지 밀어붙여 성취하는 날입니다.",
+          money: "정확한 판단으로 재물을 얻을 수 있는 기회입니다.",
+          score: 5
+        },
+        3: { // Controlled (Gwan-Seong): Discipline, Career
+          love: "배려와 예의가 서로의 신뢰를 깊게 만듭니다.",
+          career: "책임감 있는 자세가 주변의 신망을 얻게 합니다.",
+          money: "안전한 관리와 절약이 최우선인 하루입니다.",
+          score: 4
+        },
+        4: { // Support (In-Seong): Learning, Help
+          love: "상대방의 따뜻한 위로가 큰 힘이 되는 날입니다.",
+          career: "선배나 상사의 도움으로 문제가 해결됩니다.",
+          money: "문서나 계약 관련하여 좋은 소식이 들려옵니다.",
+          score: 3
+        }
+      };
+
+      const result = sipsinPool[diff];
+
+      // Add slight randomness based on user's specific character to further differentiate
+      const charSeed = userStem.charCodeAt(0) + new Date().getDate();
+      const randomOffset = (charSeed % 3) - 1; // -1, 0, or 1
+
+      return {
+        todayPillar: todayDayGanZhi,
+        love: { stars: Math.max(1, Math.min(5, result.score + randomOffset)), message: result.love },
+        career: { stars: Math.max(1, Math.min(5, result.score)), message: result.career },
+        money: { stars: Math.max(1, Math.min(5, result.score - randomOffset)), message: result.money }
+      };
+    }
+
+    function calculateSaju(year, month, day, hour, minute = 0, timeUnknown = false) {
+      if (!window.Solar || !window.Lunar) {
+        throw new Error("만세력 라이브러리가 로드되지 않았습니다. 인터넷 연결이나 잠시 후 다시 시도를 확인해주세요.");
+      }
+      try {
+        const h = parseInt(timeUnknown ? 12 : hour, 10) || 0;
+        const m = parseInt(minute, 10) || 0;
+
+        const solar = window.Solar.fromYmdHms(parseInt(year), parseInt(month), parseInt(day), h, m, 0);
+        const lunar = solar.getLunar();
+
+        // Use standard methods on Lunar object which are more stable
+        const yearPillar = (typeof lunar.getYearInGanZhiByLiChun === 'function')
+          ? lunar.getYearInGanZhiByLiChun()
+          : (lunar.getYearInGanZhi ? lunar.getYearInGanZhi() : "");
+
+        const monthPillar = (typeof lunar.getMonthInGanZhiBySection === 'function')
+          ? lunar.getMonthInGanZhiBySection()
+          : (lunar.getMonthInGanZhi ? lunar.getMonthInGanZhi() : "");
+
+        const dayPillar = lunar.getDayInGanZhi ? lunar.getDayInGanZhi() : "";
+        const hourPillar = timeUnknown ? "모름" : (lunar.getTimeInGanZhi ? lunar.getTimeInGanZhi() : "");
+
+        const toKo = (ganZhi) => {
+          if (!ganZhi || ganZhi === "모름") return ganZhi;
+          const sIdx = "甲乙丙丁戊己庚辛壬癸".indexOf(ganZhi[0]);
+          const bIdx = "子丑寅卯辰巳午未申酉戌亥".indexOf(ganZhi[1]);
+          return (sIdx !== -1 && bIdx !== -1) ? stems[sIdx] + branches[bIdx] : ganZhi;
+        };
+
+        const sajuText = {
+          year: toKo(yearPillar),
+          month: toKo(monthPillar),
+          day: toKo(dayPillar),
+          hour: hourPillar === "모름" ? "모름" : toKo(hourPillar)
+        };
+
+        const elementCount = { WOOD: 0, FIRE: 0, EARTH: 0, METAL: 0, WATER: 0 };
+
+        const countPillarChars = (ganZhi) => {
+          if (!ganZhi || ganZhi === "모름" || ganZhi.length < 2) return;
+          const g = ganZhi[0], z = ganZhi[1];
+          if (stemElement[g]) elementCount[stemElement[g]]++;
+          if (branchElement[z]) elementCount[branchElement[z]]++;
+        };
+
+        countPillarChars(yearPillar);
+        countPillarChars(monthPillar);
+        countPillarChars(dayPillar);
+        if (!timeUnknown) countPillarChars(hourPillar);
+
+        let minElement = "WOOD", minCount = 99;
+        Object.entries(elementCount).forEach(([el, count]) => {
+          if (count < minCount) { minCount = count; minElement = el; }
+        });
+
+        let maxElement = "WOOD", maxCount = 0;
+        Object.entries(elementCount).forEach(([el, count]) => {
+          if (count > maxCount) { maxCount = count; maxElement = el; }
+        });
+
+        // Generate dynamic daily fortune based on today's energy
+        const dailyFortune = getDailyFortune(dayPillar);
+
+        return {
+          pillars: sajuText,
+          elementCount,
+          missingElement: minElement,
+          strongestElement: maxElement,
+          strength: minCount === 0 ? "매우 부족" : "보통",
+          dailyFortune
+        };
+      } catch (err) {
+        console.error("Saju Calculation Error:", err);
+        throw new Error("정밀 사주 계산 중 오류 발생: " + err.message);
+      }
+    }
+
+    // View management
+    function showView(viewName) {
+      const views = document.querySelectorAll('.view');
+      views.forEach(view => view.classList.remove('active'));
+
+      document.getElementById(viewName).classList.add('active');
+
+      const navButtons = document.querySelectorAll('.nav button');
+      navButtons.forEach(btn => btn.classList.remove('active'));
+
+      // Use event.currentTarget if available, or find the button by some other means if needed.
+      // But for inline handlers, event.target or event.currentTarget might be tricky if not passed.
+      // The original code used event.target.closest('button'). Let's stick to valid JS.
+      if (window.event) {
+        const target = window.event.target.closest('button');
+        if (target) target.classList.add('active');
+      }
+
+      if (viewName === 'history') {
+        renderHistory();
+      }
+    }
+
+    // Render functions
+    function renderRooms() {
+      const grid = document.getElementById('roomsGrid');
+      grid.innerHTML = Object.values(ROOMS).map(room => `
+                <div class="room-card">
+                    <div class="room-header" style="background: ${room.bgGradient}">
+                        <div class="room-emoji">${room.image}</div>
+                        <div class="room-element">
+                            <span>${room.elementKo}</span>
+                        </div>
+                    </div>
+                    <div class="room-body">
+                        <div class="room-number">Room ${room.id}</div>
+                        <div class="room-name">${room.nameKo}</div>
+                        <div class="room-description">${room.description}</div>
+                        <div class="room-features">
+                            ${room.features.map(f => `<span class="feature-tag">${f}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+    }
+
+    function updateStats() {
+      document.getElementById('totalGuests').textContent = guests.length;
+      document.getElementById('totalMatches').textContent = guests.length;
+    }
+
+    // Check-in
+    function handleCheckIn() {
+      const name = document.getElementById('guestName').value;
+      const year = parseInt(document.getElementById('birthYear').value, 10);
+      const month = parseInt(document.getElementById('birthMonth').value, 10);
+      const day = parseInt(document.getElementById('birthDay').value, 10);
+      const hour = parseInt(document.getElementById('birthHour').value, 10);
+      const minute = parseInt(document.getElementById('birthMinute').value, 10) || 0;
+
+      const timeUnknown = document.getElementById('timeUnknown').checked;
+
+      if (!name || isNaN(year) || isNaN(month) || isNaN(day)) {
+        alert('이름, 생년월일은 필수 정보입니다.');
+        return;
+      }
+
+      if (!timeUnknown && isNaN(hour)) {
+        alert('출생 시간을 입력하거나 "출생 시간을 모르겠어요"를 선택해주세요.');
+        return;
+      }
+
+      // Validate input ranges
+      if (year < 1900 || year > 2024) {
+        alert('생년은 1900~2024 사이여야 합니다.');
+        return;
+      }
+      if (month < 1 || month > 12) {
+        alert('월은 1~12 사이여야 합니다.');
+        return;
+      }
+      if (day < 1 || day > 31) {
+        alert('일은 1~31 사이여야 합니다.');
+        return;
+      }
+      if (!timeUnknown && (hour < 0 || hour > 23)) {
+        alert('시간은 0~23 사이여야 합니다.');
+        return;
+      }
+      if (!timeUnknown && minute && (minute < 0 || minute > 59)) {
+        alert('분은 0~59 사이여야 합니다.');
+        return;
+      }
+
+      console.log('체크인 입력값:', { name, year, month, day, hour, minute });
+
+      // Lunar to Solar conversion if needed
+      let solarYear = year;
+      let solarMonth = month;
+      let solarDay = day;
+
+      if (calendarType === 'lunar') {
+        try {
+          // Use Lunar library to convert
+          const lunar = window.Lunar.fromYmd(year, month, day);
+          const solar = lunar.getSolar();
+
+          solarYear = solar.getYear();
+          solarMonth = solar.getMonth();
+          solarDay = solar.getDay();
+
+          console.log('음력→양력 변환:', {
+            lunar: `${year}-${month}-${day}`,
+            solar: `${solarYear}-${solarMonth}-${solarDay}`
+          });
+        } catch (error) {
+          console.error('Lunar conversion error:', error);
+          alert('음력 날짜 변환 중 오류가 발생했습니다. 날짜를 확인해주세요.');
+          return;
+        }
+      }
+
+      try {
+        const sajuResult = calculateSaju(solarYear, solarMonth, solarDay, timeUnknown ? null : hour, timeUnknown ? null : minute, timeUnknown);
+
+        if (!sajuResult || !sajuResult.missingElement) {
+          throw new Error('사주 계산 결과가 올바르지 않습니다.');
+        }
+
+        const recommendedRoom = Object.values(ROOMS).find(
+          room => room.element === sajuResult.missingElement
+        );
+
+        if (!recommendedRoom) {
+          throw new Error('추천 객실을 찾을 수 없습니다: ' + sajuResult.missingElement);
+        }
+
+        const guest = {
+          id: Date.now(),
+          name: name,
+          birth: { year, month, day, hour: timeUnknown ? null : hour, minute: timeUnknown ? null : minute },
+          calendarType: calendarType,
+          solarDate: calendarType === 'lunar' ? { year: solarYear, month: solarMonth, day: solarDay } : null,
+          checkInDate: new Date().toISOString(),
+          saju: sajuResult,
+          recommendedRoom: recommendedRoom.id,
+          visits: 1
+        };
+
+        guests.push(guest);
+        saveGuests();
+
+        currentGuest = guest;
+        matchResult = {
+          guest,
+          room: recommendedRoom,
+          welcome: WELCOME_ITEMS[sajuResult.missingElement]
+        };
+
+        // Clear form
+        document.getElementById('guestName').value = '';
+        document.getElementById('birthYear').value = '';
+        document.getElementById('birthMonth').value = '';
+        document.getElementById('birthDay').value = '';
+        document.getElementById('birthHour').value = '';
+        document.getElementById('birthMinute').value = '';
+
+        showResult();
+      } catch (error) {
+        console.error('Check-in Error:', error);
+        alert('체크인 중 오류가 발생했습니다: ' + error.message);
+      }
+    }
+
+    // Show result
+    function showResult() {
+      const { guest, room, welcome } = matchResult;
+
+      document.getElementById('resultGuestName').textContent = `${guest.name}님을 위한 맞춤 객실`;
+
+      // Render Saju Analysis
+      renderSajuAnalysis(guest, room);
+
+      const showcase = document.getElementById('roomShowcase');
+      showcase.style.background = room.bgGradient;
+
+      document.getElementById('roomShowcaseEmoji').textContent = room.image;
+      document.getElementById('roomShowcaseNumber').textContent = `Room ${room.id}`;
+      document.getElementById('roomShowcaseName').textContent = room.nameKo;
+      document.getElementById('roomShowcaseElement').textContent = `${room.elementKo} ${room.element}`;
+
+      const calendarTypeText = guest.calendarType === 'solar' ? '양력' : '음력';
+      const birthMinute = guest.birth.minute || 0;
+      const timeText = `${String(guest.birth.hour).padStart(2, '0')}:${String(birthMinute).padStart(2, '0')}`;
+
+      const pillars = (guest.saju && guest.saju.pillars) || { year: '-', month: '-', day: '-', hour: '-' };
+
+      document.getElementById('matchingReason').innerHTML = `
+                ${guest.name}님의 사주 (<strong>${calendarTypeText}</strong> ${guest.birth.year}년 ${guest.birth.month}월 ${guest.birth.day}일 ${timeText})를 정밀 분석한 결과, 
+                <strong>${room.elementKo}(${room.element})</strong> 기운이 
+                <strong>${guest.saju.strength}</strong>합니다. 
+                이 방은 부족한 기운을 보완하고 균형을 맞춰드립니다.
+            `;
+
+      const featuresList = document.getElementById('roomFeaturesList');
+      featuresList.innerHTML = room.features.map(f => `
+                <li>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                    ${f}
+                </li>
+            `).join('');
+
+      document.getElementById('welcomeTea').textContent = welcome.tea;
+      document.getElementById('welcomeAroma').textContent = welcome.aroma;
+      document.getElementById('welcomeActivity').textContent = welcome.activity;
+      document.getElementById('welcomeDirection').textContent = `머리를 ${welcome.direction} 방향으로`;
+      document.getElementById('welcomeColor').textContent = welcome.color;
+      document.getElementById('welcomeTip').textContent =
+        `체크인 후 방에서 ${welcome.activity}를 하시면 더욱 편안한 휴식을 취하실 수 있습니다.`;
+
+      document.getElementById('result').classList.add('active');
+      document.getElementById('checkin').classList.remove('active');
+    }
+
+    // Render Saju Analysis
+    function renderSajuAnalysis(guest, room) {
+      const { elementCount, missingElement, strongestElement } = guest.saju;
+
+      // Ensure strongestElement exists (for backward compatibility with old data)
+      const safeStrongestElement = strongestElement || missingElement;
+
+      // Hide the detailed element chart as requested
+      const elementChart = document.getElementById('elementChart');
+      if (elementChart) elementChart.style.display = 'none';
+
+      // Re-populate analysis details
+      // Render personality (with safety checks)
+      const personalityData = ELEMENT_PERSONALITIES[safeStrongestElement] || ELEMENT_PERSONALITIES['WOOD'];
+      const missingData = ELEMENT_PERSONALITIES[missingElement] || ELEMENT_PERSONALITIES['WOOD'];
+
+      document.getElementById('personalityText').innerHTML = `
+                ${personalityData.strong} 
+                <br><br>
+                다만, ${missingData.weak} 
+                <strong>${room.nameKo}</strong>에서의 숙박은 이러한 부분을 보완하고 오행의 균형을 맞춰줄 것입니다.
+            `;
+
+      // Render fortune cards
+      const fortunes = FORTUNE_MESSAGES[missingElement] || FORTUNE_MESSAGES['WOOD'];
+      const fortuneCards = document.getElementById('fortuneCards');
+      fortuneCards.innerHTML = Object.values(fortunes).map(fortune => `
+                <div class="fortune-card">
+                    <div class="fortune-icon">${fortune.icon}</div>
+                    <div class="fortune-label">${fortune.label}</div>
+                    <div class="fortune-value">${fortune.value}</div>
+                </div>
+            `).join('');
+
+      // Render balance tip
+      document.getElementById('balanceTip').textContent = BALANCE_TIPS[missingElement] || BALANCE_TIPS['WOOD'];
+
+      // Render dynamic daily fortune
+      const dailyFortune = guest.saju.dailyFortune;
+
+      if (dailyFortune) {
+        const renderStars = (count) => {
+          return '★'.repeat(count) + '☆'.repeat(5 - count);
+        };
+
+        document.getElementById('loveStars').textContent = renderStars(dailyFortune.love.stars);
+        document.getElementById('loveMessage').textContent = dailyFortune.love.message;
+
+        document.getElementById('careerStars').textContent = renderStars(dailyFortune.career.stars);
+        document.getElementById('careerMessage').textContent = dailyFortune.career.message;
+
+        document.getElementById('moneyStars').textContent = renderStars(dailyFortune.money.stars);
+        document.getElementById('moneyMessage').textContent = dailyFortune.money.message;
+
+        // Add current date and pillar to the fortune section title if needed
+        const fortuneTitle = document.querySelector('.fortune-title');
+        if (fortuneTitle) {
+          const today = new Date();
+          fortuneTitle.innerHTML = `오늘의 운세 <span style="font-size: 0.8rem; font-weight: normal; opacity: 0.7; margin-left: 10px;">(${today.getMonth() + 1}/${today.getDate()} ${dailyFortune.todayPillar}일)</span>`;
+        }
+      }
+    }
+
+    // History
+    function renderHistory() {
+      const list = document.getElementById('historyList');
+
+      if (guests.length === 0) {
+        list.innerHTML = `
+                    <div class="empty-state">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        <p>등록된 게스트가 없습니다</p>
+                    </div>
+                `;
+        return;
+      }
+
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = guests.filter(g => g.name.toLowerCase().includes(searchTerm));
+
+      list.innerHTML = filtered.map(guest => {
+        const room = ROOMS[guest.recommendedRoom];
+        const calendarTypeText = guest.calendarType === 'solar' ? '양력' : '음력';
+        const birthMinute = guest.birth.minute || 0;
+        const birthInfo = `${calendarTypeText} ${guest.birth.year}.${guest.birth.month}.${guest.birth.day} ${String(guest.birth.hour).padStart(2, '0')}:${String(birthMinute).padStart(2, '0')}`;
+
+        return `
+                    <div class="history-item" onclick="viewGuestAnalysis(${guest.id})">
+                        <div class="history-guest">
+                            <div class="history-avatar">${guest.name[0]}</div>
+                            <div class="history-info">
+                                <div class="history-name">${guest.name}</div>
+                                <div class="history-date">
+                                    ${birthInfo}
+                                </div>
+                                <div class="history-date">
+                                    체크인: ${new Date(guest.checkInDate).toLocaleDateString('ko-KR')}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="history-room">
+                            <div class="history-room-badge" style="background: ${room.bgGradient}">
+                                <span>Room ${room.id}</span>
+                            </div>
+                            <div class="history-room-name">${room.nameKo}</div>
+                        </div>
+                        
+                        <div class="history-element">
+                            <div class="element-label">부족한 기운</div>
+                            <div class="element-badge">
+                                ${room.elementKo}
+                            </div>
+                        </div>
+                        
+                        <div class="view-analysis-btn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </div>
+                    </div>
+                `;
+      }).join('');
+    }
+
+    function filterGuests() {
+      renderHistory();
+    }
+
+    // View guest analysis from history
+    function viewGuestAnalysis(guestId) {
+      const guest = guests.find(g => g.id === guestId);
+      if (!guest) return;
+
+      const room = ROOMS[guest.recommendedRoom];
+      const welcome = WELCOME_ITEMS[guest.saju.missingElement];
+
+      currentGuest = guest;
+      matchResult = {
+        guest,
+        room,
+        welcome
+      };
+
+      showResult();
+    }
+
+    // Initialize on load
+    window.onload = init;
+  </script>
+</body>
+
+</html>
